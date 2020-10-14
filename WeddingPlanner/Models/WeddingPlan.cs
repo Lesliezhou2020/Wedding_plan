@@ -15,7 +15,7 @@ namespace WeddingPlanner.Models
         [MinLength(3, ErrorMessage="Wedding Two name must be 3 characters or longer!")]
         public string WedderTwo { get; set; }
         [Required]
-        public String Date { get; set; }
+        public DateTime Date { get; set; }
         [Required]
         [MinLength(1, ErrorMessage="Address can not be empty!")]
         public string Address { get; set; }

@@ -2,3 +2,58 @@
 @using System.Collections.Generic
 @using WeddingPlanner.Models
 @model List<WeddingPlan>
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset='utf-8'>
+        <title>Index</title>
+        <link rel="stylesheet" href="~/css/style.css"/>
+    </head>
+    <body>
+        <h1>Whlcome to the Wedding Planner</h1>
+        <a href="/">Log out</a>
+        <table>
+            <thead>
+                <tr>
+                    <th>Wedding</th>
+                    <th>Date</th>
+                    <th>Guest</th>
+                    <th>Action</th>                 
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            <a href="/detail/@item.WeddingPlanId">@item.WedderOne &@item.WedderTwo</a>
+                        </td>
+                        <td>@item.Date</td>
+                        <td>@item.Guests.Count</td>
+                        <td>
+                            @if(item.UserId == @ViewBag.userid)
+                            {
+                                <a href="/delete/@item.WeddingPlanId">Delete</a>
+                            }
+                            else
+                            {
+                                @if(item.Guests.Any(x => x.UserId == @ViewBag.userid))
+                                {
+                                    <a href="/un-rsvp/@item.WeddingPlanId">Un-RSVP</a>
+                                }
+                                else
+                                {
+                                    <a href="/rsvp/@item.WeddingPlanId">RSVP</a>
+
+                                }
+                            }
+                        </td>
+                    </tr>
+                    
+                }
+            </tbody>
+        </table>
+        <button><a href="/new">New Wedding</a></button>
+
+    </body>
+</html>

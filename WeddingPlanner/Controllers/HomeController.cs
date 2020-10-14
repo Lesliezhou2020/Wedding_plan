@@ -24,7 +24,7 @@ namespace WeddingPlanner.Controllers
         public IActionResult Index()
         {
             Login_Register_wrapper wrapper = new Login_Register_wrapper();
-            return View(wrapper);
+            return View("Index", wrapper);
         }
 
         [HttpPost("process_register")]
@@ -36,6 +36,8 @@ namespace WeddingPlanner.Controllers
                 FromForm.Password = Hasher.HashPassword(FromForm, FromForm.Password);
                 _context.Add(FromForm);
                 _context.SaveChanges();
+                var user = _context.Users.FirstOrDefault(u => u.Email == FromForm.Email);
+                HttpContext.Session.SetInt32("active_user", user.UserId);
                 return RedirectToAction("Dashboard");
             }
             Login_Register_wrapper wrapper=new Login_Register_wrapper();
@@ -46,6 +48,7 @@ namespace WeddingPlanner.Controllers
         [HttpPost("login")]
         public IActionResult Login(LoginUser FromForm)
         {
+            Login_Register_wrapper wrapper=new Login_Register_wrapper();
             if(ModelState.IsValid)
             {
                 // If inital ModelState is valid, query for a user with provided email
@@ -54,8 +57,8 @@ namespace WeddingPlanner.Controllers
                 if(userInDb == null)
                 {
                     // Add an error to ModelState and return to View!
-                    ModelState.AddModelError("Email", "Invalid Email/Password");
-                    return RedirectToAction("Login");
+                    ModelState.AddModelError("Email", "Invalid Email");
+                    return View("Index", wrapper);
                 }
                 
                 // Initialize hasher object
@@ -68,24 +71,25 @@ namespace WeddingPlanner.Controllers
                 if(result == 0)
                 {
                     // handle failure (this should be similar to how "existing email" is handled)
-                    return RedirectToAction("Dashboard");
+                    ModelState.AddModelError("Password", "Invalid Password");
+                    return View("Index", wrapper);
                 }
                 HttpContext.Session.SetInt32("active_user", userInDb.UserId);
-                return RedirectToAction("Details", new {accountId = userInDb.UserId});
+                return RedirectToAction("Dashboard");
             }
-            Login_Register_wrapper wrapper=new Login_Register_wrapper();
             return RedirectToAction("Index", wrapper);
         }
 
         [HttpGet("dashboard")]
         public IActionResult Dashboard()
         {
-            if(HttpContext.Session.GetString("Firstname") != null){
+            int? active_user= HttpContext.Session.GetInt32("active_user");
+            if(active_user.HasValue){
                 List<WeddingPlan> AllPlans = _context.WeddingPlans
                     .Include(w => w.Guests)
                     .ToList();
-                    ViewBag.UserId =(int)HttpContext.Session.GetInt32("id");
-                    return View("AllPlans");
+                    ViewBag.UserId = active_user;
+                    return View("Dashboard", AllPlans);
             }
             else{
                 return RedirectToAction("Index");
@@ -95,12 +99,13 @@ namespace WeddingPlanner.Controllers
         [HttpGet("un-rsvp/{PlanId}")]
         public IActionResult Unrsvp(int PlanId)
         {
-            if(HttpContext.Session.GetInt32("active_userId") != null){
+            int? active_userId = HttpContext.Session.GetInt32("active_user");
+            if(active_userId.HasValue){
                 List<Resevation> resevations = _context.Resevations.Where(r => r.WeddingPlanId == PlanId)
                     .ToList();
                 int resevationId = 0;
                 foreach(Resevation x in resevations){
-                    if(x.UserId == (int)HttpContext.Session.GetInt32("id"))
+                    if(x.UserId == active_userId.Value)
                     {
                         resevationId = x.ResevationId;
                     }
@@ -119,9 +124,10 @@ namespace WeddingPlanner.Controllers
         [HttpGet("rsvp/{PlanId}")]
         public IActionResult Rsvp(int PlanId)
         {
-            if(HttpContext.Session.GetInt32("active_userId") != null){
+            int? active_user = HttpContext.Session.GetInt32("active_user");
+            if(active_user.HasValue){
                 Resevation resevation = new Resevation();
-                resevation.UserId = (int)HttpContext.Session.GetInt32("id");
+                resevation.UserId = active_user.Value;
                 resevation.WeddingPlanId = PlanId;
                 _context.Resevations.Add(resevation);
                 _context.SaveChanges();
@@ -130,10 +136,11 @@ namespace WeddingPlanner.Controllers
             return RedirectToAction("Index");
         }
 
-        [HttpGet("delet/{PlanId}")]
+        [HttpGet("delete/{PlanId}")]
         public IActionResult Delete(int PlanId)
         {
-            if(HttpContext.Session.GetInt32("active_userId") != null) {
+            int? active_user = HttpContext.Session.GetInt32("active_user");
+            if(active_user.HasValue) {
                 WeddingPlan plan = _context.WeddingPlans.FirstOrDefault(p => p.WeddingPlanId == PlanId);
                 _context.WeddingPlans.Remove(plan);
                 _context.SaveChanges();
@@ -147,7 +154,7 @@ namespace WeddingPlanner.Controllers
         {
             if(ModelState.IsValid){
                
-                WeddingPlan.UserId = (int)HttpContext.Session.GetInt32("id");
+                WeddingPlan.UserId = HttpContext.Session.GetInt32("active_user").Value;
                 _context.Add(WeddingPlan);
                 _context.SaveChanges();
                 return RedirectToAction("Dashboard");
@@ -161,22 +168,22 @@ namespace WeddingPlanner.Controllers
             return View();
         }
 
-        [HttpGet("detail/{PlanId")]
-        public IActionResult Display_Plan_Detail(int PlanId)
+        [HttpGet("detail/{PlanId}")]
+        public IActionResult DisplayOnePlan(int PlanId)
         {
-            List<Resevation> Guest = _context.Resevations
+            List<Resevation> guest = _context.Resevations
                 .Include(r => r.User)
                 .Where(r => r.WeddingPlanId == PlanId)
                 .ToList();
 
-            WeddingPlan Oneplan = _context.WeddingPlans
+            WeddingPlan oneplan = _context.WeddingPlans
                 .FirstOrDefault(w => w.WeddingPlanId == PlanId);
-            DisplayOnePlan display_One_Plan = new DisplayOnePlan
+            DisplayOnePlan DisplayOnePlan = new DisplayOnePlan
             {
-                Guest = Guest,
-                Oneplan = Oneplan
+                Guest = guest,
+                Oneplan = oneplan
             };
-            return View(display_One_Plan);
+            return View("DisplayOnePlan", DisplayOnePlan);
         }
 
 

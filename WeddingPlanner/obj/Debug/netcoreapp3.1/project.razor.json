@@ -14402,6 +14402,16 @@
       "FileKind": "mvc"
     },
     {
+      "FilePath": "/Users/leslie/Desktop/C#/Wedding_plan/WeddingPlanner/Views/Home/DisplayOnePlan.cshtml",
+      "TargetPath": "Views\\Home\\DisplayOnePlan.cshtml",
+      "FileKind": "mvc"
+    },
+    {
+      "FilePath": "/Users/leslie/Desktop/C#/Wedding_plan/WeddingPlanner/Views/Home/AddWeddingPlan.cshtml",
+      "TargetPath": "Views\\Home\\AddWeddingPlan.cshtml",
+      "FileKind": "mvc"
+    },
+    {
       "FilePath": "/Users/leslie/Desktop/C#/Wedding_plan/WeddingPlanner/Views/Home/_Login.cshtml",
       "TargetPath": "Views\\Home\\_Login.cshtml",
       "FileKind": "mvc"
